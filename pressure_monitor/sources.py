@@ -26,6 +26,20 @@ class SourceError(RuntimeError):
     """Raised when a source cannot be opened or dies while streaming."""
 
 
+def _reason(error: Exception) -> str:
+    """A readable reason for an error, for display next to the port name.
+
+    pyserial wraps the operating system message in its own, so a missing port
+    arrives as ``[Errno 2] could not open port /dev/x: [Errno 2] No such file or
+    directory: '/dev/x'``. Only the innermost part carries information.
+    """
+    text = str(error)
+    _, _, innermost = text.rpartition("[Errno ")
+    if "] " in innermost:
+        return innermost.split("] ", 1)[1]
+    return text
+
+
 class SampleSource(ABC):
     """A stream of raw sensor pairs, read from a background thread."""
 
@@ -55,7 +69,7 @@ class SerialSampleSource(SampleSource):
                 self.port, self.baudrate, timeout=READ_TIMEOUT_S
             )
         except (serial.SerialException, OSError, ValueError) as error:
-            raise SourceError(f"Could not open {self.port}: {error}") from error
+            raise SourceError(f"Could not open {self.port}: {_reason(error)}") from error
         time.sleep(ARDUINO_RESET_DELAY_S)
         self._serial.reset_input_buffer()
 
@@ -65,7 +79,9 @@ class SerialSampleSource(SampleSource):
         try:
             raw_line = self._serial.readline()
         except (serial.SerialException, OSError) as error:
-            raise SourceError(f"Lost connection to {self.port}: {error}") from error
+            raise SourceError(
+                f"Lost connection to {self.port}: {_reason(error)}"
+            ) from error
         if not raw_line:
             return None
         return parse_sample_line(raw_line.decode("ascii", errors="ignore"))
