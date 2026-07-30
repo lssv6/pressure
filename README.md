@@ -51,18 +51,29 @@ already sends kilopascals only needs the span set to 1 count per kPa.
 
 ## Install and run
 
-Python 3.10 or newer:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/), which creates the
+environment and fetches Python itself if needed:
 
 ```bash
-pip install -r requirements.txt
-python -m pressure_monitor
+uv run pressure-monitor
 ```
+
+That is the whole install: `uv run` syncs the versions pinned in `uv.lock` first.
+Use `uv sync` if you would rather create the environment up front.
 
 Useful flags when you always use the same board:
 
 ```bash
-python -m pressure_monitor --port /dev/ttyACM0 --baud 115200 --connect
-python -m pressure_monitor --port sim --connect   # built-in simulator
+uv run pressure-monitor --port /dev/ttyACM0 --baud 115200 --connect
+uv run pressure-monitor --port sim --connect   # built-in simulator
+```
+
+Without uv, any Python 3.10 or newer works too, just without the pinned
+versions:
+
+```bash
+pip install -e .
+python -m pressure_monitor
 ```
 
 The selected port, baud rate, unit, time window and span are remembered between
@@ -99,7 +110,7 @@ pressure_monitor/
     sources.py        serial port, port discovery and the simulator
     ui/               plot, controls, main window and colour scheme
 arduino/dual_hx710b/  the sketch to upload to the board
-tests/                unit tests for everything outside the UI
+tests/                unit tests, plus the parts of the UI that hold state
 ```
 
 Samples are stored as raw counts and converted only when drawn, so changing the
@@ -109,8 +120,8 @@ well as the new data.
 ## Tests
 
 ```bash
-pip install pytest
-python -m pytest
+uv run pytest
+uv run ruff check .
 ```
 
 ## Troubleshooting
