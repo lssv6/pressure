@@ -32,6 +32,7 @@ class Calibration:
         return self.counts_per_kpa
 
     def to_kpa(self, raw: float, channel: int) -> float:
+        """Convert one count, or a whole array of them, to kilopascals."""
         return (raw - self.offsets[channel]) / self.span
 
     def tare(self, raw_values: tuple[float, float]) -> None:

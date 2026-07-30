@@ -50,7 +50,7 @@ class PlotPanel(QWidget):
                 autoDownsample=True,
                 clipToView=True,
             )
-            for name, color in zip(CHANNEL_NAMES, theme.CHANNEL_COLORS)
+            for name, color in zip(CHANNEL_NAMES, theme.CHANNEL_COLORS, strict=True)
         ]
 
         layout = QVBoxLayout(self)
@@ -85,7 +85,7 @@ class PlotPanel(QWidget):
             self._unit.from_kpa(channel_1_kpa),
             self._unit.from_kpa(channel_2_kpa),
         )
-        for curve, values in zip(self._curves, channels):
+        for curve, values in zip(self._curves, channels, strict=True):
             curve.setData(elapsed, values)
         self._update_y_range(channels)
 
@@ -106,6 +106,6 @@ class PlotPanel(QWidget):
             # Easing towards the target avoids the axis twitching every frame.
             self._y_range = tuple(  # type: ignore[assignment]
                 current + (goal - current) * Y_RANGE_SMOOTHING
-                for current, goal in zip(self._y_range, target)
+                for current, goal in zip(self._y_range, target, strict=True)
             )
         self._plot.setYRange(*self._y_range, padding=0)

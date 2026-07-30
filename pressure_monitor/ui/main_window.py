@@ -17,7 +17,7 @@ from ..buffers import RollingBuffer
 from ..calibration import Calibration
 from ..reader import SampleReader
 from ..sources import available_ports, create_source
-from ..units import DEFAULT_UNIT
+from ..units import DEFAULT_UNIT, PressureUnit
 from .control_panel import (
     DEFAULT_BAUD_RATE,
     DEFAULT_WINDOW_S,
@@ -156,8 +156,8 @@ class MainWindow(QMainWindow):
         self._set_state("Zero point reset to raw counts")
         self._redraw()
 
-    def _on_unit_changed(self, unit: object) -> None:
-        self._plot.set_unit(unit)  # type: ignore[arg-type]
+    def _on_unit_changed(self, unit: PressureUnit) -> None:
+        self._plot.set_unit(unit)
         self._redraw()
 
     def _on_window_changed(self, seconds: int) -> None:
@@ -196,8 +196,7 @@ class MainWindow(QMainWindow):
             )
         )
         self._metrics_label.setText(
-            f"{self._buffer.sample_rate():.1f} Hz · {len(self._buffer)} samples "
-            f"in view"
+            f"{self._buffer.sample_rate():.1f} Hz · {len(self._buffer)} samples in view"
         )
 
     def _set_state(self, text: str) -> None:
@@ -247,7 +246,7 @@ class MainWindow(QMainWindow):
         settings.setValue("window/geometry", self.saveGeometry())
         settings.setValue("window/splitter", self._splitter.saveState())
 
-    def closeEvent(self, event) -> None:  # noqa: N802 - Qt naming
+    def closeEvent(self, event) -> None:
         self._timer.stop()
         self._reader.stop()
         self._save_settings()
