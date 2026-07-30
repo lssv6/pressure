@@ -101,7 +101,7 @@ class ControlPanel(QWidget):
         box, layout = _group("Live readings")
         self._readings = [
             _ReadingRow(name, color)
-            for name, color in zip(CHANNEL_NAMES, theme.CHANNEL_COLORS)
+            for name, color in zip(CHANNEL_NAMES, theme.CHANNEL_COLORS, strict=True)
         ]
         for row in self._readings:
             layout.addWidget(row)
@@ -226,17 +226,29 @@ class ControlPanel(QWidget):
         for port in ports:
             self._ports.addItem(port.label, port.device)
         self._ports.addItem(SIMULATED_LABEL, SIMULATED_PORT)
-        index = self._ports.findData(previous)
-        self._ports.setCurrentIndex(max(index, 0))
+        if previous:
+            self.select_port(previous)
+        else:
+            self._ports.setCurrentIndex(0)
         self._ports.blockSignals(False)
 
     def port(self) -> str:
         return self._ports.currentData() or ""
 
     def select_port(self, device: str) -> None:
+        """Select a port, listing it first if the scan did not report it.
+
+        Ports named on the command line or restored from the previous session do
+        not always show up in the scan, and silently connecting to some other
+        board instead would be worse than offering one the user asked for.
+        """
+        if not device:
+            return
         index = self._ports.findData(device)
-        if index >= 0:
-            self._ports.setCurrentIndex(index)
+        if index < 0:
+            self._ports.insertItem(0, device, device)
+            index = 0
+        self._ports.setCurrentIndex(index)
 
     def baud_rate(self) -> int:
         return int(self._baud.currentData())
